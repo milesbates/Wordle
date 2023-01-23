@@ -41,6 +41,11 @@ char* get_word(char* file) {
     return 0;
 }
 
+int check_word(char* guess, char* word) {
+
+
+}
+
 // Fetch the initial word from a dictionary/json/database/something else.
 // Display the game in command line over time
 /* handle 5 letter words as input, see which letters are 
