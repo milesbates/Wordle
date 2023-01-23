@@ -1,7 +1,11 @@
 #include <stdio.h>
+int start_game();
+char* get_words();
+void display();
+#define num_letters 5
 
 int main() {
-    printf("hello");
+    start_game();
 }
 
 void display() {
@@ -9,9 +13,14 @@ void display() {
 }
 
 int start_game() {
-    int num_letters;
-    printf("How many letters would you like to play with?");
-    scanf("%d", &num_letters);
+    int num_tries = num_letters+1;
+    char initial_word[num_letters] = get_words();
+    for (int i = 0; i <= num_tries; i++) {
+        display();
+        char guess_word[num_letters];
+        scanf("%c", &guess_word);
+    }
+    return 0;
 }
 
 // Fetch the initial word from a dictionary/json/database/something else.
