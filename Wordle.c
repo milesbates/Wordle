@@ -1,6 +1,6 @@
 #include <stdio.h>
 int start_game();
-char* get_words();
+char* get_word();
 void display();
 #define num_letters 5
 
@@ -23,7 +23,7 @@ int start_game() {
     return 0;
 }
 
-char* getWord(char* file) {
+char* get_word(char* file) {
     //Later generalize function so it allows input from any text file.
     int word = rand()%5758;
     char line[255];
