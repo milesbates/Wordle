@@ -34,6 +34,7 @@ char* get_word(char* file) {
         current_line++;
         if (current_line == word) {
             printf("Line %d: %s", line_num, line);
+            return line;
             break;
         }
     }
