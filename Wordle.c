@@ -1,6 +1,6 @@
 #include <stdio.h>
 int start_game();
-char* get_word();
+char* get_word(char* file);
 void display();
 #define num_letters 5
 
@@ -14,7 +14,7 @@ void display() {
 
 int start_game() {
     int num_tries = num_letters+1;
-    char initial_word[num_letters] = get_words();
+    char initial_word[num_letters] = get_word("five_letter_words.txt");
     for (int i = 0; i <= num_tries; i++) {
         display();
         char guess_word[num_letters];
