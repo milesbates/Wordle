@@ -1,7 +1,11 @@
 #include <stdio.h>
+int start_game();
+char* get_word(char* file);
+void display();
+#define num_letters 5
 
 int main() {
-    printf("hello");
+    start_game();
 }
 
 void display() {
@@ -9,9 +13,38 @@ void display() {
 }
 
 int start_game() {
-    int num_letters;
-    printf("How many letters would you like to play with?");
-    scanf("%d", &num_letters);
+    int num_tries = num_letters+1;
+    char initial_word[num_letters] = get_word("five_letter_words.txt");
+    for (int i = 0; i <= num_tries; i++) {
+        display();
+        char guess_word[num_letters];
+        scanf("%c", &guess_word);
+    }
+    return 0;
+}
+
+char* get_word(char* file) {
+    //Later generalize function so it allows input from any text file.
+    int word = rand()%5758;
+    char line[255];
+    int line_num = 5;
+    int current_line = 0;
+    FILE *file = fopen("five_letter_words.txt","r");
+    while (fgets(line, sizeof(line), file) != NULL) {
+        current_line++;
+        if (current_line == word) {
+            printf("Line %d: %s", line_num, line);
+            return line;
+            break;
+        }
+    }
+    fclose(file);
+    return 0;
+}
+
+int check_word(char* guess, char* word) {
+
+
 }
 
 void check_game(){
