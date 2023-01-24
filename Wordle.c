@@ -1,6 +1,10 @@
 #include <stdio.h>
 int start_game();
+<<<<<<< Updated upstream
 char* get_word(char* file);
+=======
+char* get_word();
+>>>>>>> Stashed changes
 void display();
 #define num_letters 5
 
