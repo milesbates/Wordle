@@ -3,20 +3,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
-#define K_NUM_LETTERS 4
-#define num_tries K_NUM_LETTERS + 1
+#define K_NUM_LETTERS 5
+#define num_tries 6
 #define YELLOW "\e[0;33m"
 #define GREEN "\e[0;32m"
 #define REG "\e[0;37m"
-#define BLACK "\e[0;30m"
+#define BLACK "\e[1;90m"
 
 void start_game();
 void get_word(char *file, char *out);
 void display();
 void check_word(int *colors, char *guess, char *word);
 void game_end(int num_attempts, char* word);
-void get_color(char *color, int num);
+int get_color(char *color, int num);
+int check_validity(char* guess, char* filename);
+void get_input(char* out);
+void fseekthing(FILE* file, int len);
 
 char past_attempts[num_tries][K_NUM_LETTERS];
 int past_colors[num_tries][K_NUM_LETTERS];
@@ -28,7 +32,6 @@ char files[3][30] = {"words/four_letter_words.txt",
 int main() { start_game(); }
 
 void display() {
-  system("clear");
   for (int i = 0; i < num_tries; i++) {
     for (int k = 0; k < K_NUM_LETTERS; k++) {
       char color[8];
@@ -42,26 +45,27 @@ void display() {
   }
   for (int i = 0; i < 26; i++) {
     char color[8];
-    get_color(color, alphabet_colors[i]);
-    printf("%s%c ", color, i+97);
-    // printf("%d ", alphabet_colors[i]);
+    int val = get_color(color, alphabet_colors[i]);
+    if(!val) {
+      printf("%s%c ", color, i+97);
+    }
   }
   printf("\n%s", REG);
 }
-void get_color(char *color, int num) {
+int get_color(char *color, int num) {
   switch (num) {
     case 0:
       strcpy(color, REG);
-      break;
+      return 0;
     case 1:
       strcpy(color, YELLOW);
-      break;
+      return 0;
     case 2:
       strcpy(color, GREEN);
-      break;
+      return 0;
     case 3:
       strcpy(color, BLACK);
-      break;
+      return 1;
   }
 }
 
@@ -73,18 +77,16 @@ void start_game() {
   // printf("How long would you like the word to be?\n");
   // int index;
   // scanf("%d", &index);
-  char filename[] = "/home/runner/WordleCppProject-ESD22F-PostAPCS-D-1/words/";
   // printf("filename: %s", files[index-4]);
   // strcat(filename, files[index-4]);
   char initial_word[K_NUM_LETTERS + 1];
   get_word(files[K_NUM_LETTERS-4], initial_word);
   for (int i = 0; i < num_tries; i++) {
-    display();
     printf("Word to guess for: %s\n", initial_word);
     // leave extra space at the end of string arrays for null character
     char guess_word[K_NUM_LETTERS + 1];
-    printf("Your guess: ");
-    scanf("%s", guess_word);
+    display();
+    get_input(guess_word);
     int colors[K_NUM_LETTERS] = {0};
     check_word(colors, guess_word, initial_word);
     strcpy(past_attempts[i], guess_word);
@@ -97,53 +99,65 @@ void start_game() {
       game_end(i+1, initial_word);
     }
   }
-  game_end(num_tries, initial_word);
+  game_end(num_tries+1, initial_word);
 }
 
 void game_end(int num_attempts, char* word) {
   display();
-  if(num_attempts == num_tries) {
+  if(num_attempts == num_tries+1) {
     printf("You lose! The word was %s", word);
   } else {
     printf("You got it in %d tries!\n", num_attempts);
   }
   char replay_input;
-  printf("Would you like to play again? (Y/N) ");
+  printf("Would you like to play again? (Y/n) ");
   scanf("%s", &replay_input);
   if(replay_input == 'Y') {
     start_game();
-  } else if(replay_input == 'N') {
+  } else {
     printf("Thanks for playing!");
     exit(EXIT_SUCCESS);
   }
 }
 
-void get_word(char *file, char *out) {
+void get_input(char* out) {
+  char temp[K_NUM_LETTERS+1];
+  printf("Your guess: ");
+  scanf("%s", temp);
+  if(check_validity(temp, files[K_NUM_LETTERS-4])) {
+    strcpy(out, temp);
+  } else {
+    printf("Please enter valid input. ");
+    get_input(out);
+  }
+}
+
+void get_word(char *filename, char *out) {
   // Later generalize function so it allows input from any text file.
   srand(time(NULL));
   char line[K_NUM_LETTERS+2];
   int current_line = 0;
-  FILE *filename = fopen(file, "r");
+  FILE *file = fopen(filename, "r");
   if (filename == NULL) {
     perror("File not found / opened.");
   }
-  fgets(line, sizeof(line), filename);
+  fgets(line, sizeof(line), file);
   int num_words = atoi(line);
   int word = rand() % num_words;
-  while (fgets(line, sizeof(line), filename) != NULL) {
-    current_line++;
-    if (current_line == word) {
-      // printf("Line %d: %s", current_line, line);
-      for (int i = 0; i <= K_NUM_LETTERS; i++) {
-        out[i] = line[i];
-      }
-      return;
-    }
-  }
-  fclose(filename);
-  return;
+  int len = K_NUM_LETTERS+1;
+  fseekthing(file, len*word);
+  fgets(line, sizeof(line), file);
+  strcpy(out, line);
 }
-
+void fseekthing(FILE* file, int len) {
+  if(K_NUM_LETTERS == 5) {
+    fseek(file, len-1, SEEK_SET);
+  } else if (K_NUM_LETTERS == 4) {
+    fseek(file, len, SEEK_SET);
+  } else if (K_NUM_LETTERS == 6) {
+    fseek(file, len-2, SEEK_SET);
+  }
+}
 void check_word(int *colors, char *guess, char *word) {
   int taken_locations[K_NUM_LETTERS] = {0};
   for (int i = 0; i < K_NUM_LETTERS; ++i) {
@@ -175,10 +189,58 @@ void check_word(int *colors, char *guess, char *word) {
   }
 }
 
-int check_validity(char *guess){
+int check_validity(char *guess, char* file){
+  //0 means invalid, 1 means valid
+  int len = strlen(guess);
+
+  //checks if word is proper length
+    // printf("%d: len(%d) (%d) (%s) (%s)\n",__LINE__, len, K_NUM_LETTERS, guess, file);
+  
+  if(len != K_NUM_LETTERS){
+    return 0;
+  }
+
+  //check if any ints
+  for(int i = 0; guess[i] != '\0'; i++){
+    // printf("%d: guess[%d]=(%c) (%d)\n",__LINE__, i, guess[i], isalpha(guess[i]));
+    
+    if(!isalpha(guess[i])){
+      return 0;
+    }
+  }
+  //make lowercase
+  char temp[K_NUM_LETTERS+2];
+  for(int i = 0; guess[i] != '\0'; i++){
+    temp[i] = guess[i];
+    temp[i] = tolower(temp[i]);
+  }
   // Check if word is in the corresponding file
-  // Handle capitalization properly
-  // Prompt for input again if the word isn't in the file
+  FILE *filename = fopen(files[K_NUM_LETTERS-4], "r");
+  char line[K_NUM_LETTERS+2];
+
+  char str[20];
+  fgets(str, 5, filename);
+  char check[K_NUM_LETTERS+2];
+  int start = 1, end = atoi(str);
+  int num_iter = 0;
+  int width;
+  while(start <= end && num_iter < 16) {
+    num_iter++;
+    int middle = (end+start)/2;
+    fseekthing(filename, (K_NUM_LETTERS+1)*middle);
+    fgets(check, K_NUM_LETTERS+1, filename);
+    int cmp_val = strcmp(check, temp);
+    if(cmp_val < 0){
+      start = middle+1;
+    }
+    else if (cmp_val > 0){
+      end = middle-1;
+    }
+    else {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 // int check_win()
